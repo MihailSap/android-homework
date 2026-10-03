@@ -1,4 +1,4 @@
-package ru.sapegin.androidhomework.model
+package ru.sapegin.androidhomework.domain.model
 
 data class ListItem(
     val id: String,
