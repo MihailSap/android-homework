@@ -3,34 +3,63 @@ package ru.sapegin.androidhomework.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.createSavedStateHandle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import ru.sapegin.androidhomework.data.BreweryRepository
-import ru.sapegin.androidhomework.data.MockBreweryRepository
-import ru.sapegin.androidhomework.model.ListItem
+import kotlinx.coroutines.launch
+import ru.sapegin.androidhomework.data.repository.NetworkBreweryRepository
+import ru.sapegin.androidhomework.data.api.RetrofitClient
+import ru.sapegin.androidhomework.domain.usecase.GetBreweryByIdUseCase
+import ru.sapegin.androidhomework.domain.model.ListItem
 
-data class DetailsUiState(
-    val item: ListItem? = null
-)
+sealed interface DetailsUiState {
+
+    data object Loading : DetailsUiState
+
+    data class Success(
+        val item: ListItem
+    ) : DetailsUiState
+
+    data class Error(
+        val message: String
+    ) : DetailsUiState
+}
 
 class DetailsViewModel(
     savedStateHandle: SavedStateHandle,
-    private val repository: BreweryRepository = MockBreweryRepository()
+    private val getBreweryByIdUseCase: GetBreweryByIdUseCase
 ) : ViewModel() {
 
     private val itemId: String =
         checkNotNull(savedStateHandle.get<String>("itemId"))
 
-    private val _uiState = MutableStateFlow(
-        DetailsUiState(
-            item = repository.getItemById(itemId)
-        )
-    )
+    private val _uiState =
+        MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
 
     val uiState: StateFlow<DetailsUiState> = _uiState.asStateFlow()
+
+    init {
+        loadBrewery()
+    }
+
+    private fun loadBrewery() {
+        viewModelScope.launch {
+            _uiState.value = DetailsUiState.Loading
+
+            try {
+                val item = getBreweryByIdUseCase(itemId)
+
+                _uiState.value = DetailsUiState.Success(item)
+            } catch (e: Exception) {
+                _uiState.value = DetailsUiState.Error(
+                    message = e.message ?: "Не удалось загрузить данные"
+                )
+            }
+        }
+    }
 }
 
 class DetailsViewModelFactory : ViewModelProvider.Factory {
@@ -42,9 +71,16 @@ class DetailsViewModelFactory : ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(DetailsViewModel::class.java)) {
             val savedStateHandle = extras.createSavedStateHandle()
 
+            val repository = NetworkBreweryRepository(
+                RetrofitClient.api
+            )
+
+            val useCase = GetBreweryByIdUseCase(repository)
+
             @Suppress("UNCHECKED_CAST")
             return DetailsViewModel(
-                savedStateHandle = savedStateHandle
+                savedStateHandle = savedStateHandle,
+                getBreweryByIdUseCase = useCase
             ) as T
         }
 
