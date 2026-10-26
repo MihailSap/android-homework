@@ -7,7 +7,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,46 +14,86 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import ru.sapegin.androidhomework.screen.details.DetailsRoute
+import ru.sapegin.androidhomework.screen.favorites.FavoritesRoute
+import ru.sapegin.androidhomework.screen.filters.FiltersRoute
 import ru.sapegin.androidhomework.screen.list.ListRoute
-import ru.sapegin.androidhomework.screen.more.MoreScreen
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val backStackEntry = navController.currentBackStackEntryAsState().value
+
+    val backStackEntry = navController
+        .currentBackStackEntryAsState().value
+
     val currentRoute = backStackEntry?.destination?.route
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(
-                currentRoute = currentRoute,
-                onItemSelected = { destination ->
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+            if (currentRoute != AppDestination.Filters.route) {
+                BottomNavigationBar(
+                    currentRoute = currentRoute,
+                    onItemSelected = { destination ->
+                        navController.navigate(destination.route) {
+                            popUpTo(
+                                navController.graph.startDestinationId
+                            ) {
+                                saveState = true
+                            }
+
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
+
         NavHost(
             navController = navController,
             startDestination = AppDestination.List.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = androidx.compose.ui.Modifier.padding(
+                innerPadding
+            )
         ) {
             composable(AppDestination.List.route) {
                 ListRoute(
+                    onItemClick = { itemId ->
+                        navController.navigate("details/$itemId")
+                    },
+                    onFiltersClick = {
+                        navController.navigate(
+                            AppDestination.Filters.route
+                        )
+                    }
+                )
+            }
+
+            composable(AppDestination.Favorites.route) {
+                FavoritesRoute(
                     onItemClick = { itemId ->
                         navController.navigate("details/$itemId")
                     }
                 )
             }
 
-            composable(AppDestination.More.route) {
-                MoreScreen()
+            composable(AppDestination.Filters.route) {
+                FiltersRoute(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onDone = {
+                        navController.navigate(
+                            AppDestination.List.route
+                        ) {
+                            popUpTo(AppDestination.List.route) {
+                                inclusive = true
+                            }
+
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
 
             composable(
@@ -84,7 +123,9 @@ private fun BottomNavigationBar(
         bottomNavigationItems.forEach { destination ->
             NavigationBarItem(
                 selected = currentRoute == destination.route,
-                onClick = { onItemSelected(destination) },
+                onClick = {
+                    onItemSelected(destination)
+                },
                 icon = {
                     Icon(
                         imageVector = destination.icon,

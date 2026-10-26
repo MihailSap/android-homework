@@ -1,8 +1,8 @@
 package ru.sapegin.androidhomework.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AppDestination(
@@ -17,10 +17,10 @@ sealed class AppDestination(
         icon = Icons.Outlined.List
     )
 
-    data object More : AppDestination(
-        route = "more",
-        title = "Еще",
-        icon = Icons.Outlined.MoreHoriz
+    data object Favorites : AppDestination(
+        route = "favorites",
+        title = "Избранное",
+        icon = Icons.Filled.Star
     )
 
     data object Details : AppDestination(
@@ -28,9 +28,15 @@ sealed class AppDestination(
         title = "Детали",
         icon = Icons.Outlined.List
     )
+
+    data object Filters : AppDestination(
+        route = "filters",
+        title = "Фильтры",
+        icon = Icons.Outlined.List
+    )
 }
 
 val bottomNavigationItems = listOf(
     AppDestination.List,
-    AppDestination.More
+    AppDestination.Favorites
 )

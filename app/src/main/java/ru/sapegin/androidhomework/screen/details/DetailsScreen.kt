@@ -1,5 +1,6 @@
 package ru.sapegin.androidhomework.screen.details
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -30,8 +31,9 @@ import ru.sapegin.androidhomework.viewmodel.DetailsViewModelFactory
 fun DetailsRoute(
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val viewModel: DetailsViewModel = viewModel(
-        factory = DetailsViewModelFactory()
+        factory = DetailsViewModelFactory(context)
     )
 
     val uiState by viewModel.uiState.collectAsState()
