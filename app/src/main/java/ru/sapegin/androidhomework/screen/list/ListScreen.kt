@@ -16,7 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.sapegin.androidhomework.model.ListItem
+import ru.sapegin.androidhomework.viewmodel.ListItemUiModel
 import ru.sapegin.androidhomework.viewmodel.ListViewModel
 
 @Composable
@@ -34,7 +34,7 @@ fun ListRoute(
 
 @Composable
 private fun ListScreen(
-    items: List<ListItem>,
+    items: List<ListItemUiModel>,
     onItemClick: (String) -> Unit
 ) {
     Column(
@@ -50,9 +50,12 @@ private fun ListScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.weight(1f)
         ) {
-            items(items) { item ->
+            items(
+                items = items,
+                key = { it.id }
+            ) { item ->
                 ListItemCard(
                     item = item,
                     onClick = {
@@ -66,7 +69,7 @@ private fun ListScreen(
 
 @Composable
 private fun ListItemCard(
-    item: ListItem,
+    item: ListItemUiModel,
     onClick: () -> Unit
 ) {
     Card(
@@ -85,18 +88,21 @@ private fun ListItemCard(
                 text = item.name,
                 style = MaterialTheme.typography.titleLarge
             )
+
             Text(
-                text = "Тип: ${item.breweryType}",
+                text = item.typeText,
                 modifier = Modifier.padding(top = 6.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
+
             Text(
-                text = "Расположение: ${item.city}, ${item.stateProvince}",
+                text = item.locationText,
                 modifier = Modifier.padding(top = 8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
+
             Text(
-                text = "Страна: ${item.country}",
+                text = item.countryText,
                 modifier = Modifier.padding(top = 4.dp),
                 style = MaterialTheme.typography.bodyMedium
             )

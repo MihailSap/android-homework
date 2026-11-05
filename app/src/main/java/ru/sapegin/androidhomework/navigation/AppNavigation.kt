@@ -24,20 +24,27 @@ fun AppNavigation() {
     val backStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = backStackEntry?.destination?.route
 
+    val bottomBarRoutes = setOf(
+        AppDestination.List.route,
+        AppDestination.More.route
+    )
+
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(
-                currentRoute = currentRoute,
-                onItemSelected = { destination ->
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+            if (currentRoute in bottomBarRoutes) {
+                BottomNavigationBar(
+                    currentRoute = currentRoute,
+                    onItemSelected = { destination ->
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
