@@ -18,12 +18,20 @@ import ru.sapegin.androidhomework.domain.model.ListItem
 import ru.sapegin.androidhomework.domain.repository.FavoriteBreweryRepository
 import ru.sapegin.androidhomework.domain.usecase.GetBreweriesUseCase
 
+data class BreweryListItemUiModel(
+    val id: String,
+    val name: String,
+    val typeText: String,
+    val locationText: String,
+    val countryText: String
+)
+
 sealed interface ListUiState {
 
     data object Loading : ListUiState
 
     data class Success(
-        val items: List<ListItem>
+        val items: List<BreweryListItemUiModel>
     ) : ListUiState
 
     data class Error(
@@ -43,6 +51,13 @@ class ListViewModel(
 
     val uiState: StateFlow<ListUiState> = _uiState.asStateFlow()
 
+    private val exceptionHandler = createCoroutineExceptionHandler { throwable ->
+        _uiState.value = ListUiState.Error(
+            message = throwable.message
+                ?: "Не удалось загрузить данные"
+        )
+    }
+
     private val _favoriteIds =
         MutableStateFlow<Set<String>>(emptySet())
 
@@ -58,6 +73,8 @@ class ListViewModel(
     val shouldShowFiltersBadge: StateFlow<Boolean> =
         filtersBadgeCache.shouldShowBadge
 
+    private var itemsById: Map<String, ListItem> = emptyMap()
+
     init {
         observeFavorites()
         loadBreweries()
@@ -71,7 +88,9 @@ class ListViewModel(
         }
     }
 
-    fun toggleFavorite(item: ListItem) {
+    fun toggleFavorite(itemId: String) {
+        val item = itemsById[itemId] ?: return
+
         viewModelScope.launch {
             try {
                 favoriteRepository.toggleFavorite(item)
@@ -84,25 +103,31 @@ class ListViewModel(
     }
 
     private fun loadBreweries() {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler) {
             _uiState.value = ListUiState.Loading
+            itemsById = emptyMap()
 
-            try {
-                val filters = filterStorage.loadFilters()
+            val filters = filterStorage.loadFilters()
 
-                filtersBadgeCache.update(filters)
+            filtersBadgeCache.update(filters)
 
-                val items = getBreweriesUseCase(filters)
+            val items = getBreweriesUseCase(filters)
 
-                _uiState.value = ListUiState.Success(items)
-            } catch (e: Exception) {
-                _uiState.value = ListUiState.Error(
-                    message = e.message
-                        ?: "Не удалось загрузить данные"
-                )
-            }
+            itemsById = items.associateBy { it.id }
+
+            val uiModels = items.map { it.toUiModel() }
+
+            _uiState.value = ListUiState.Success(uiModels)
         }
     }
+
+    private fun ListItem.toUiModel() = BreweryListItemUiModel(
+        id = id,
+        name = name,
+        typeText = "Тип: $breweryType",
+        locationText = "Расположение: $city, $stateProvince",
+        countryText = "Страна: $country"
+    )
 }
 
 class ListViewModelFactory(

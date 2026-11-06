@@ -35,7 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.sapegin.androidhomework.di.AppContainer
-import ru.sapegin.androidhomework.domain.model.ListItem
+import ru.sapegin.androidhomework.viewmodel.BreweryListItemUiModel
 import ru.sapegin.androidhomework.viewmodel.ListUiState
 import ru.sapegin.androidhomework.viewmodel.ListViewModel
 import ru.sapegin.androidhomework.viewmodel.ListViewModelFactory
@@ -114,13 +114,13 @@ private fun ErrorScreen(
 
 @Composable
 private fun ListScreen(
-    items: List<ListItem>,
+    items: List<BreweryListItemUiModel>,
     favoriteIds: Set<String>,
     favoriteError: String?,
     shouldShowFiltersBadge: Boolean,
     onItemClick: (String) -> Unit,
     onFiltersClick: () -> Unit,
-    onFavoriteClick: (ListItem) -> Unit
+    onFavoriteClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -205,7 +205,7 @@ private fun ListScreen(
                             onItemClick(item.id)
                         },
                         onFavoriteClick = {
-                            onFavoriteClick(item)
+                            onFavoriteClick(item.id)
                         }
                     )
                 }
@@ -216,7 +216,7 @@ private fun ListScreen(
 
 @Composable
 private fun ListItemCard(
-    item: ListItem,
+    item: BreweryListItemUiModel,
     isFavorite: Boolean,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit
@@ -246,19 +246,19 @@ private fun ListItemCard(
                 )
 
                 Text(
-                    text = "Тип: ${item.breweryType}",
+                    text = item.typeText,
                     modifier = Modifier.padding(top = 6.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Text(
-                    text = "Расположение: ${item.city}, ${item.stateProvince}",
+                    text = item.locationText,
                     modifier = Modifier.padding(top = 8.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Text(
-                    text = "Страна: ${item.country}",
+                    text = item.countryText,
                     modifier = Modifier.padding(top = 4.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )

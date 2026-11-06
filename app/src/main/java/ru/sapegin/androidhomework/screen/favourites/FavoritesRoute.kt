@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.sapegin.androidhomework.domain.model.ListItem
+import ru.sapegin.androidhomework.viewmodel.FavoriteItemUiModel
 import ru.sapegin.androidhomework.viewmodel.FavoritesViewModel
 import ru.sapegin.androidhomework.viewmodel.FavoritesViewModelFactory
 
@@ -53,7 +53,6 @@ fun FavoritesRoute(
             )
         }
     ) { innerPadding ->
-
         if (favorites.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -94,7 +93,7 @@ fun FavoritesRoute(
 
 @Composable
 private fun FavoriteItemCard(
-    item: ListItem,
+    item: FavoriteItemUiModel,
     onClick: () -> Unit,
     onRemoveClick: () -> Unit
 ) {
@@ -124,19 +123,19 @@ private fun FavoriteItemCard(
                 )
 
                 Text(
-                    text = "Тип: ${item.breweryType}",
+                    text = item.typeText,
                     modifier = Modifier.padding(top = 6.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Text(
-                    text = "Расположение: ${item.city}, ${item.stateProvince}",
+                    text = item.locationText,
                     modifier = Modifier.padding(top = 8.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Text(
-                    text = "Страна: ${item.country}",
+                    text = item.countryText,
                     modifier = Modifier.padding(top = 4.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )

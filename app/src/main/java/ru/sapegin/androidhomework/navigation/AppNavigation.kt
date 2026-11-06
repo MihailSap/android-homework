@@ -27,9 +27,13 @@ fun AppNavigation() {
 
     val currentRoute = backStackEntry?.destination?.route
 
+    val showBottomBar = bottomNavigationItems.any {
+        it.route == currentRoute
+    }
+
     Scaffold(
         bottomBar = {
-            if (currentRoute != AppDestination.Filters.route) {
+            if (showBottomBar) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onItemSelected = { destination ->
@@ -39,7 +43,6 @@ fun AppNavigation() {
                             ) {
                                 saveState = true
                             }
-
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -48,7 +51,6 @@ fun AppNavigation() {
             }
         }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = AppDestination.List.route,
