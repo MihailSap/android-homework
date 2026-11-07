@@ -17,6 +17,8 @@ import ru.sapegin.androidhomework.screen.details.DetailsRoute
 import ru.sapegin.androidhomework.screen.favorites.FavoritesRoute
 import ru.sapegin.androidhomework.screen.filters.FiltersRoute
 import ru.sapegin.androidhomework.screen.list.ListRoute
+import ru.sapegin.androidhomework.screen.profile.ProfileEditRoute
+import ru.sapegin.androidhomework.screen.profile.ProfileRoute
 
 @Composable
 fun AppNavigation() {
@@ -75,6 +77,27 @@ fun AppNavigation() {
                 FavoritesRoute(
                     onItemClick = { itemId ->
                         navController.navigate("details/$itemId")
+                    }
+                )
+            }
+
+            composable(AppDestination.Profile.route) {
+                ProfileRoute(
+                    onEditClick = {
+                        navController.navigate(
+                            AppDestination.ProfileEdit.route
+                        )
+                    }
+                )
+            }
+
+            composable(AppDestination.ProfileEdit.route) {
+                ProfileEditRoute(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onDone = {
+                        navController.popBackStack()
                     }
                 )
             }
