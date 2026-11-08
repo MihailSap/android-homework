@@ -17,6 +17,8 @@ import ru.sapegin.androidhomework.screen.details.DetailsRoute
 import ru.sapegin.androidhomework.screen.favorites.FavoritesRoute
 import ru.sapegin.androidhomework.screen.filters.FiltersRoute
 import ru.sapegin.androidhomework.screen.list.ListRoute
+import ru.sapegin.androidhomework.screen.profile.ProfileEditRoute
+import ru.sapegin.androidhomework.screen.profile.ProfileRoute
 
 @Composable
 fun AppNavigation() {
@@ -27,9 +29,13 @@ fun AppNavigation() {
 
     val currentRoute = backStackEntry?.destination?.route
 
+    val showBottomBar = bottomNavigationItems.any {
+        it.route == currentRoute
+    }
+
     Scaffold(
         bottomBar = {
-            if (currentRoute != AppDestination.Filters.route) {
+            if (showBottomBar) {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onItemSelected = { destination ->
@@ -39,7 +45,6 @@ fun AppNavigation() {
                             ) {
                                 saveState = true
                             }
-
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -48,7 +53,6 @@ fun AppNavigation() {
             }
         }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = AppDestination.List.route,
@@ -73,6 +77,27 @@ fun AppNavigation() {
                 FavoritesRoute(
                     onItemClick = { itemId ->
                         navController.navigate("details/$itemId")
+                    }
+                )
+            }
+
+            composable(AppDestination.Profile.route) {
+                ProfileRoute(
+                    onEditClick = {
+                        navController.navigate(
+                            AppDestination.ProfileEdit.route
+                        )
+                    }
+                )
+            }
+
+            composable(AppDestination.ProfileEdit.route) {
+                ProfileEditRoute(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onDone = {
+                        navController.popBackStack()
                     }
                 )
             }

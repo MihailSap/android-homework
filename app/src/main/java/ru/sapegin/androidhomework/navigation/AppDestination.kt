@@ -3,6 +3,7 @@ package ru.sapegin.androidhomework.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AppDestination(
@@ -23,6 +24,18 @@ sealed class AppDestination(
         icon = Icons.Filled.Star
     )
 
+    data object Profile : AppDestination(
+        route = "profile",
+        title = "Профиль",
+        icon = Icons.Outlined.Person
+    )
+
+    data object ProfileEdit : AppDestination(
+        route = "profile/edit",
+        title = "Редактирование",
+        icon = Icons.Outlined.Person
+    )
+
     data object Details : AppDestination(
         route = "details/{itemId}",
         title = "Детали",
@@ -38,5 +51,6 @@ sealed class AppDestination(
 
 val bottomNavigationItems = listOf(
     AppDestination.List,
-    AppDestination.Favorites
+    AppDestination.Favorites,
+    AppDestination.Profile
 )

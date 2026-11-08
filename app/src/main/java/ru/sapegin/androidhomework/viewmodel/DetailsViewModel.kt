@@ -19,12 +19,30 @@ import ru.sapegin.androidhomework.domain.model.ListItem
 import ru.sapegin.androidhomework.domain.repository.FavoriteBreweryRepository
 import ru.sapegin.androidhomework.domain.usecase.GetBreweryByIdUseCase
 
+data class DetailsUiModel(
+    val nameText: String,
+    val breweryTypeText: String,
+    val address1Text: String,
+    val address2Text: String,
+    val address3Text: String,
+    val cityText: String,
+    val stateProvinceText: String,
+    val postalCodeText: String,
+    val countryText: String,
+    val longitudeText: String,
+    val latitudeText: String,
+    val phoneText: String,
+    val websiteUrlText: String,
+    val stateText: String,
+    val streetText: String
+)
+
 sealed interface DetailsUiState {
 
     data object Loading : DetailsUiState
 
     data class Success(
-        val item: ListItem
+        val uiModel: DetailsUiModel
     ) : DetailsUiState
 
     data class Error(
@@ -46,27 +64,47 @@ class DetailsViewModel(
 
     val uiState: StateFlow<DetailsUiState> = _uiState.asStateFlow()
 
+    private val exceptionHandler = createCoroutineExceptionHandler { throwable ->
+        _uiState.value = DetailsUiState.Error(
+            message = throwable.message
+                ?: "Не удалось загрузить данные"
+        )
+    }
+
     init {
         loadBrewery()
     }
 
     private fun loadBrewery() {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler) {
             _uiState.value = DetailsUiState.Loading
 
-            try {
-                val favorite = favoriteRepository.getFavoriteById(itemId)
-                val item = favorite ?: getBreweryByIdUseCase(itemId)
+            val favorite = favoriteRepository.getFavoriteById(itemId)
+            val item = favorite ?: getBreweryByIdUseCase(itemId)
 
-                _uiState.value = DetailsUiState.Success(item)
-            } catch (e: Exception) {
-                _uiState.value = DetailsUiState.Error(
-                    message = e.message
-                        ?: "Не удалось загрузить данные"
-                )
-            }
+            _uiState.value = DetailsUiState.Success(
+                uiModel = item.toUiModel()
+            )
         }
     }
+
+    private fun ListItem.toUiModel() = DetailsUiModel(
+        nameText = "Название: $name",
+        breweryTypeText = "Тип пивоварни: $breweryType",
+        address1Text = "Адрес 1: ${address1 ?: "не указан"}",
+        address2Text = "Адрес 2: ${address2 ?: "не указан"}",
+        address3Text = "Адрес 3: ${address3 ?: "не указан"}",
+        cityText = "Город: $city",
+        stateProvinceText = "Штат/провинция: $stateProvince",
+        postalCodeText = "Почтовый индекс: $postalCode",
+        countryText = "Страна: $country",
+        longitudeText = "Долгота: $longitude",
+        latitudeText = "Широта: $latitude",
+        phoneText = "Телефон: $phone",
+        websiteUrlText = "Сайт: ${websiteUrl ?: "не указан"}",
+        stateText = "Штат: $state",
+        streetText = "Улица: ${street ?: "не указана"}"
+    )
 }
 
 class DetailsViewModelFactory(

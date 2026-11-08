@@ -1,6 +1,6 @@
 package ru.sapegin.androidhomework.screen.details
 
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -15,14 +15,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.sapegin.androidhomework.domain.model.ListItem
+import ru.sapegin.androidhomework.viewmodel.DetailsUiModel
 import ru.sapegin.androidhomework.viewmodel.DetailsUiState
 import ru.sapegin.androidhomework.viewmodel.DetailsViewModel
 import ru.sapegin.androidhomework.viewmodel.DetailsViewModelFactory
@@ -32,6 +33,7 @@ fun DetailsRoute(
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
+
     val viewModel: DetailsViewModel = viewModel(
         factory = DetailsViewModelFactory(context)
     )
@@ -45,7 +47,7 @@ fun DetailsRoute(
 
         is DetailsUiState.Success -> {
             DetailsScreen(
-                item = state.item,
+                uiModel = state.uiModel,
                 onBackClick = onBackClick
             )
         }
@@ -61,7 +63,7 @@ fun DetailsRoute(
 
 @Composable
 private fun LoadingScreen() {
-    androidx.compose.foundation.layout.Box(
+    Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
@@ -69,6 +71,7 @@ private fun LoadingScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ErrorScreen(
     message: String,
@@ -76,7 +79,6 @@ private fun ErrorScreen(
 ) {
     Scaffold(
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = {
                     Text("Детали")
@@ -92,7 +94,7 @@ private fun ErrorScreen(
             )
         }
     ) { innerPadding ->
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -107,7 +109,7 @@ private fun ErrorScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailsScreen(
-    item: ListItem,
+    uiModel: DetailsUiModel,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -127,7 +129,6 @@ private fun DetailsScreen(
             )
         }
     ) { innerPadding ->
-
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -157,7 +158,7 @@ private fun DetailsScreen(
             ) = createRefs()
 
             Text(
-                text = "Название: ${item.name}",
+                text = uiModel.nameText,
                 modifier = Modifier.constrainAs(name) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
@@ -165,7 +166,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Тип пивоварни: ${item.breweryType}",
+                text = uiModel.breweryTypeText,
                 modifier = Modifier.constrainAs(breweryType) {
                     top.linkTo(name.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -173,7 +174,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Адрес 1: ${item.address1 ?: "не указан"}",
+                text = uiModel.address1Text,
                 modifier = Modifier.constrainAs(address1) {
                     top.linkTo(breweryType.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -181,7 +182,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Адрес 2: ${item.address2 ?: "не указан"}",
+                text = uiModel.address2Text,
                 modifier = Modifier.constrainAs(address2) {
                     top.linkTo(address1.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -189,7 +190,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Адрес 3: ${item.address3 ?: "не указан"}",
+                text = uiModel.address3Text,
                 modifier = Modifier.constrainAs(address3) {
                     top.linkTo(address2.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -197,7 +198,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Город: ${item.city}",
+                text = uiModel.cityText,
                 modifier = Modifier.constrainAs(city) {
                     top.linkTo(address3.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -205,7 +206,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Штат/провинция: ${item.stateProvince}",
+                text = uiModel.stateProvinceText,
                 modifier = Modifier.constrainAs(stateProvince) {
                     top.linkTo(city.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -213,7 +214,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Почтовый индекс: ${item.postalCode}",
+                text = uiModel.postalCodeText,
                 modifier = Modifier.constrainAs(postalCode) {
                     top.linkTo(stateProvince.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -221,7 +222,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Страна: ${item.country}",
+                text = uiModel.countryText,
                 modifier = Modifier.constrainAs(country) {
                     top.linkTo(postalCode.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -229,7 +230,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Долгота: ${item.longitude}",
+                text = uiModel.longitudeText,
                 modifier = Modifier.constrainAs(longitude) {
                     top.linkTo(country.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -237,7 +238,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Широта: ${item.latitude}",
+                text = uiModel.latitudeText,
                 modifier = Modifier.constrainAs(latitude) {
                     top.linkTo(longitude.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -245,7 +246,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Телефон: ${item.phone}",
+                text = uiModel.phoneText,
                 modifier = Modifier.constrainAs(phone) {
                     top.linkTo(latitude.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -253,7 +254,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Сайт: ${item.websiteUrl ?: "не указан"}",
+                text = uiModel.websiteUrlText,
                 modifier = Modifier.constrainAs(websiteUrl) {
                     top.linkTo(phone.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -261,7 +262,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Штат: ${item.state}",
+                text = uiModel.stateText,
                 modifier = Modifier.constrainAs(state) {
                     top.linkTo(websiteUrl.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
@@ -269,7 +270,7 @@ private fun DetailsScreen(
             )
 
             Text(
-                text = "Улица: ${item.street ?: "не указана"}",
+                text = uiModel.streetText,
                 modifier = Modifier.constrainAs(street) {
                     top.linkTo(state.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
