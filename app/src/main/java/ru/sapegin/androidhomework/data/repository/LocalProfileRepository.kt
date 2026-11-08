@@ -31,7 +31,8 @@ class LocalProfileRepository(
             fullName = preferences.getString("fullName", "").orEmpty(),
             avatarUri = preferences.getString("avatarUri", null),
             resumeUrl = preferences.getString("resumeUrl", "").orEmpty(),
-            position = preferences.getString("position", "").orEmpty()
+            position = preferences.getString("position", "").orEmpty(),
+            reminderTime = preferences.getString("reminderTime", "").orEmpty()
         )
     }
 
@@ -41,6 +42,7 @@ class LocalProfileRepository(
             .putString("avatarUri", profile.avatarUri)
             .putString("resumeUrl", profile.resumeUrl)
             .putString("position", profile.position)
+            .putString("reminderTime", profile.reminderTime)
             .apply()
         _profile.value = profile
     }

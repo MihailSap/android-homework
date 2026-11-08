@@ -1,7 +1,7 @@
-
 package ru.sapegin.androidhomework.screen.profile
 
 import android.Manifest
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,9 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.sapegin.androidhomework.data.notification.FavoriteClassAlarmScheduler
 import ru.sapegin.androidhomework.viewmodel.ProfileViewModel
 import ru.sapegin.androidhomework.viewmodel.ProfileViewModelFactory
 import java.io.File
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun ProfileEditRoute(
@@ -99,6 +103,23 @@ fun ProfileEditRoute(
             storagePermissionLauncher.launch(photoPermissions)
         }
     }
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                if (viewModel.saveProfile()) {
+                    onDone()
+                }
+            } else {
+                Toast.makeText(
+                    context,
+                    "Для получения напоминаний необходимо разрешить уведомления",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -198,6 +219,51 @@ fun ProfileEditRoute(
         }
     }
 
+    val isReminderTimeValid =
+        FavoriteClassAlarmScheduler.isValidReminderTime(
+            draft.reminderTime
+        )
+
+    fun saveProfile() {
+        if (!isReminderTimeValid) {
+            return
+        }
+        if (
+            !FavoriteClassAlarmScheduler.canScheduleExactAlarms(
+                context
+            )
+        ) {
+            Toast.makeText(
+                context,
+                "Разрешите установку будильников и напоминаний",
+                Toast.LENGTH_LONG
+            ).show()
+
+            FavoriteClassAlarmScheduler.requestExactAlarmPermission(
+                context
+            )
+
+            return
+        }
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+
+            return
+        }
+
+        if (viewModel.saveProfile()) {
+            onDone()
+        }
+    }
+
     if (hasPhotoAccess) {
         Scaffold(
             topBar = {
@@ -274,6 +340,79 @@ fun ProfileEditRoute(
                     singleLine = true
                 )
 
+                OutlinedTextField(
+                    value = draft.reminderTime,
+                    onValueChange = viewModel::updateReminderTime,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        Text("Время любимой пары")
+                    },
+                    placeholder = {
+                        Text("HH:mm")
+                    },
+                    singleLine = true,
+                    isError = !isReminderTimeValid,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    ),
+                    supportingText = {
+                        if (!isReminderTimeValid) {
+                            Text("Введите корректное время в формате HH:mm")
+                        } else {
+                            Text("Напоминание будет установлено на сегодня")
+                        }
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                val currentTime = Calendar.getInstance()
+
+                                val parts = draft.reminderTime.split(":")
+
+                                val initialHour = parts
+                                    .getOrNull(0)
+                                    ?.toIntOrNull()
+                                    ?.takeIf { it in 0..23 }
+                                    ?: currentTime.get(
+                                        Calendar.HOUR_OF_DAY
+                                    )
+
+                                val initialMinute = parts
+                                    .getOrNull(1)
+                                    ?.toIntOrNull()
+                                    ?.takeIf { it in 0..59 }
+                                    ?: currentTime.get(
+                                        Calendar.MINUTE
+                                    )
+
+                                TimePickerDialog(
+                                    context,
+                                    { _, hour, minute ->
+                                        val selectedTime = String.format(
+                                            Locale.US,
+                                            "%02d:%02d",
+                                            hour,
+                                            minute
+                                        )
+
+                                        viewModel.updateReminderTime(
+                                            selectedTime
+                                        )
+                                    },
+                                    initialHour,
+                                    initialMinute,
+                                    true
+                                ).show()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AccessTime,
+                                contentDescription = "Выбрать время"
+                            )
+                        }
+                    }
+                )
+
                 error?.let { message ->
                     Text(
                         text = message,
@@ -283,11 +422,9 @@ fun ProfileEditRoute(
 
                 Button(
                     onClick = {
-                        if (viewModel.saveProfile()) {
-                            onDone()
-                        }
+                        saveProfile()
                     },
-                    enabled = !isSavingAvatar,
+                    enabled = !isSavingAvatar && isReminderTimeValid,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Готово")

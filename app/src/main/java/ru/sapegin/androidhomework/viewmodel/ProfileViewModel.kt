@@ -8,12 +8,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import ru.sapegin.androidhomework.data.notification.FavoriteClassAlarmScheduler
 import ru.sapegin.androidhomework.di.AppContainer
 import ru.sapegin.androidhomework.domain.repository.ProfileRepository
 import java.net.URI
 
 class ProfileViewModel(
-    private val repository: ProfileRepository
+    private val repository: ProfileRepository,
+    private val reminderScheduler: FavoriteClassAlarmScheduler
 ) : ViewModel() {
 
     val profile = repository.profile
@@ -48,6 +50,11 @@ class ProfileViewModel(
         _error.value = null
     }
 
+    fun updateReminderTime(value: String) {
+        _draft.value = _draft.value.copy(reminderTime = value)
+        _error.value = null
+    }
+
     fun updateAvatarFromUri(uri: String) {
         if (_isSavingAvatar.value) return
 
@@ -77,8 +84,14 @@ class ProfileViewModel(
         val updatedProfile = _draft.value.copy(
             fullName = _draft.value.fullName.trim(),
             position = _draft.value.position.trim(),
-            resumeUrl = _draft.value.resumeUrl.trim()
+            resumeUrl = _draft.value.resumeUrl.trim(),
+            reminderTime = _draft.value.reminderTime.trim()
         )
+
+        if (!FavoriteClassAlarmScheduler.isValidReminderTime(updatedProfile.reminderTime)) {
+            _error.value = "Укажите время в правильном формате HH:mm"
+            return false
+        }
 
         if (
             updatedProfile.resumeUrl.isNotBlank() &&
@@ -86,6 +99,19 @@ class ProfileViewModel(
         ) {
             _error.value =
                 "Укажите корректную ссылку на файл, начинающуюся с https://"
+
+            return false
+        }
+
+        try {
+            reminderScheduler.schedule(
+                reminderTime = updatedProfile.reminderTime,
+                fullName = updatedProfile.fullName
+            )
+        } catch (e: Exception) {
+            _error.value = e.message
+                ?: "Не удалось установить напоминание"
+
             return false
         }
 
@@ -147,14 +173,22 @@ class ProfileViewModelFactory(
     context: Context
 ) : ViewModelProvider.Factory {
 
-    private val repository = AppContainer.provideProfileRepository(context)
+    private val appContext = context.applicationContext
+
+    private val repository = AppContainer.provideProfileRepository(appContext)
+
+    private val reminderScheduler =
+        FavoriteClassAlarmScheduler(appContext)
 
     override fun <T : ViewModel> create(
         modelClass: Class<T>
     ): T {
         if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ProfileViewModel(repository) as T
+            return ProfileViewModel(
+                repository = repository,
+                reminderScheduler = reminderScheduler
+            ) as T
         }
 
         throw IllegalArgumentException(
