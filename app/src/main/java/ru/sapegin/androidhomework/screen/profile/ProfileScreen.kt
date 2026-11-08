@@ -91,6 +91,7 @@ fun ProfileRoute(
         position = profile.position,
         avatarUri = profile.avatarUri,
         resumeUrl = profile.resumeUrl,
+        reminderTime = profile.reminderTime,
         error = error,
         isDownloading = isDownloading,
         onEditClick = onEditClick,
@@ -105,6 +106,7 @@ private fun ProfileScreen(
     position: String,
     avatarUri: String?,
     resumeUrl: String,
+    reminderTime: String,
     error: String?,
     isDownloading: Boolean,
     onEditClick: () -> Unit,
@@ -153,6 +155,15 @@ private fun ProfileScreen(
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
+
+            Text(
+                text = if (reminderTime.isBlank()) {
+                    "Время любимой пары не установлено"
+                } else {
+                    "Время любимой пары: $reminderTime"
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             if (resumeUrl.isBlank()) {
                 Text(
