@@ -74,7 +74,8 @@ class LocalProfileRepository(
                 }
             }
             if (uri.authority == "${appContext.packageName}.fileprovider"
-                && uri.pathSegments.firstOrNull() == "camera_images") {
+                && uri.pathSegments.firstOrNull() == "camera_images"
+            ) {
                 uri.lastPathSegment?.let { fileName ->
                     File(File(appContext.cacheDir, "camera"), fileName).delete()
                 }
